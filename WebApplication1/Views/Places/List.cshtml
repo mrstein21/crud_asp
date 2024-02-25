@@ -1,0 +1,98 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<h1>List Place</h1>
+<a href="/Places/Add"><button class="btn btn-primary">Add Place</button></a>
+<div id="app">
+    <table class="table">
+        <thead>
+            <tr>
+                <td>Name</td>
+                <td>Description</td>
+                <td>Location</td>
+                <td>Action</td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-if="isLoading == false && data.length>0" v-for="row in data">
+                <td>{{row.name}}</td>
+                <td>{{row.description}}</td>
+                <td>{{row.location}}</td>
+                <td>
+                    <a :href="'/Places/Edit/'+row.id" ><button class="btn btn-primary">Edit</button></a>
+                    <button v-on:click="confirm(row.id)" class="btn btn-danger">Delete</button>
+                </td>
+            </tr>
+            <tr v-if="isLoading == false && data.length == 0">
+                <td colspan="4">There is No Data</td>
+            </tr>
+            <tr v-if="isLoading == true">
+                <td colspan="4">Loading ...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.0"></script>
+<script src="https://unpkg.com/vue-swal"></script>
+
+<script>
+    var app = new Vue({
+        el: "#app",
+        data() {
+            return {
+                isLoading: false,
+                data :[],
+            };
+        },
+        mounted() {
+            this.getData();
+        },
+        methods: {
+            getData() {
+                this.isLoading = true;
+                axios.get("/api/location").then((resp) => {
+                    this.isLoading = false;
+                    this.data = resp.data;
+                    console.log("Berhasil");
+                }).catch((err) => {
+                    this.isLoading = false;
+                    console.log(err);
+                });
+
+            },
+            confirm(id) { 
+                this.$swal({
+                    title: "Are you sure?",
+                    text: "You will not be able to recover this record !",
+                    icon: "warning",
+                    buttons: [
+                        'No',
+                        'Yes'
+                    ],
+                    dangerMode: true,
+                }).then((confirm) => {
+                    if (confirm) {
+                        this.deleteRecord(id);
+                    }
+                });
+            },
+            deleteRecord(id) {
+                this.isLoading = true;
+                axios.delete("/api/location/"+id).then((resp) => {
+                    this.isLoading = false;
+                    console.log("Berhasil");
+                    this.$swal("Success !", "Record are successfully deleted!", "success");
+                    this.getData();
+                }).catch((err) => {
+                    this.isLoading = false;
+                    this.$swal("Error", "Failed to delete record,Something went wrong.", "error");
+                });
+            }
+        },
+    });
+
+</script>
